@@ -36,7 +36,7 @@ def iter_books(root: Path) -> Iterable[tuple[str, str, Path]]:
             yield author_dir.name, book_path.stem, book_path
 
 
-def build_dataset(root: Path, output_csv: Path, window_size: int, seed: int) -> None:
+def build_dataset(root: Path, output_csv: Path, window_size: int, seed: int, target_per_author: int = 1000) -> None:
     rng = random.Random(seed)
     rows: list[dict[str, str]] = []
 
@@ -70,7 +70,20 @@ def build_dataset(root: Path, output_csv: Path, window_size: int, seed: int) -> 
 
     df = pd.read_csv(output_csv)
     df['words'] = df['words'].apply(ast.literal_eval)
-    df.to_csv(output_csv, index=False)
+
+    # Drop rows where token list is empty
+    df = df[df['words'].apply(lambda x: len(x) > 0)]
+
+    # Resample per-author to ensure fixed size per author (sample with replacement if needed)
+    balanced = []
+    for author in sorted(df['author'].unique()):
+        author_df = df[df['author'] == author]
+        replace = len(author_df) < target_per_author
+        sampled = author_df.sample(n=target_per_author, replace=replace, random_state=seed)
+        balanced.append(sampled)
+
+    df_balanced = pd.concat(balanced, ignore_index=True)
+    df_balanced.to_csv(output_csv, index=False)
 
 
 if __name__ == "__main__":
@@ -101,6 +114,12 @@ if __name__ == "__main__":
         default=42,
         help="Random seed for reproducible sampling.",
     )
+    parser.add_argument(
+        "--target-per-author",
+        type=int,
+        default=1000,
+        help="Target number of rows to sample per author (will sample with replacement if necessary).",
+    )
 
     args = parser.parse_args()
-    build_dataset(args.root, args.output, args.window_size, args.seed)
+    build_dataset(args.root, args.output, args.window_size, args.seed, args.target_per_author)

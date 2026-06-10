@@ -83,6 +83,8 @@ def build_words_dataset(input_csv: Path, output_csv: Path, max_sentences_per_id:
     
     # Convert words from JSON strings to actual lists
     df_balanced['words'] = df_balanced['words'].apply(ast.literal_eval)
+    # Drop rows where the token list is empty
+    df_balanced = df_balanced[df_balanced['words'].apply(lambda x: len(x) > 0)]
     
     # Save to CSV
     df_balanced.to_csv(output_csv, index=False)
