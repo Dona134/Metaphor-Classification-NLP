@@ -1,6 +1,8 @@
 # Metaphor Detection & Stylistic Fingerprinting
 
-A two-stage NLP pipeline that (1) trains RoBERTa-based classifiers for metaphor detection and (2) uses those classifiers to extract stylistic features and cluster documents by authorial/genre fingerprint.
+## About
+
+This project explores how metaphor usage can reveal writing style. It trains RoBERTa-based sentence- and token-level metaphor classifiers, then uses their predictions to build stylistic feature profiles and cluster texts by author and genre.
 
 ---
 
